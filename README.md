@@ -118,7 +118,94 @@ fi
 cp node_modules/react-native-camera/postinstall_project/projectWithoutFaceDetection.pbxproj node_modules/react-native-camera/ios/RNCamera.xcodeproj/project.pbxproj
 ```
 
-And add something like this to the `scripts` section in your `package.json`:
+## Properties
+
+#### `aspect`
+
+Values: `Camera.constants.Aspect.fit` or `"fit"`, `Camera.constants.Aspect.fill` or `"fill"` (default), `Camera.constants.Aspect.stretch` or `"stretch"`
+
+The `aspect` property allows you to define how your viewfinder renders the camera's view. For instance, if you have a square viewfinder and you want to fill the it entirely, you have two options: `"fill"`, where the aspect ratio of the camera's view is preserved by cropping the view or `"stretch"`, where the aspect ratio is skewed in order to fit the entire image inside the viewfinder. The other option is `"fit"`, which ensures the camera's entire view fits inside your viewfinder without altering the aspect ratio.
+
+#### `iOS` `captureAudio`
+
+Values: `true` (Boolean), `false` (default)
+
+*Applies to video capture mode only.* Specifies whether or not audio should be captured with the video.
+
+
+#### `captureMode`
+
+Values: `Camera.constants.CaptureMode.still` (default), `Camera.constants.CaptureMode.video`
+
+The type of capture that will be performed by the camera - either a still image or video.
+
+#### `captureTarget`
+
+Values: `Camera.constants.CaptureTarget.cameraRoll` (default), `Camera.constants.CaptureTarget.disk`, `Camera.constants.CaptureTarget.temp`, ~~`Camera.constants.CaptureTarget.memory`~~ (deprecated),
+
+This property allows you to specify the target output of the captured image data. The disk output has been shown to improve capture response time, so that is the recommended value. When using the deprecated memory output, the image binary is sent back as a base64-encoded string.
+
+#### `captureQuality`
+
+Values: `Camera.constants.CaptureQuality.high` or `"high"` (default), `Camera.constants.CaptureQuality.medium` or `"medium"`, `Camera.constants.CaptureQuality.low` or `"low"`, `Camera.constants.CaptureQuality.photo` or `"photo"`, `Camera.constants.CaptureQuality["1080p"]` or `"1080p"`, `Camera.constants.CaptureQuality["720p"]` or `"720p"`, `Camera.constants.CaptureQuality["480p"]` or `"480p"`.
+
+This property allows you to specify the quality output of the captured image or video. By default the quality is set to high.
+
+When choosing more-specific quality settings (1080p, 720p, 480p), note that each platform and device supports different valid picture/video sizes, and actual resolution within each of these quality settings might differ. There should not be too much variance (if any) for iOS; 1080p should give 1920x1080, 720p should give 1280x720, and 480p should give 640x480 (note that iOS 480p therefore is NOT the typical 16:9 HD aspect ratio, and the typically-HD camera preview screen may differ greatly in aspect from what you actually record!!). For Android, expect more variance: on most Androids, 1080p *should* give 1920x1080 and 720p *should* give 1280x720; however, 480p will at "best" be 853x480 (16:9 HD aspect ratio), but falls back/down to 800x480, 720x480, or "worse", depending on what is closest-but-less-than 853x480 and available on the actual device. If your application requires knowledge of the precise resolution of the output image/video, you might consider manually determine the actual resolution itself after capture has completed (particularly for 480p on Android).
+
+Android also supports `Camera.constants.CaptureQuality.preview` or `"preview"` which matches the output image to the same one used in the preview
+
+#### `type`
+
+Values: `Camera.constants.Type.front` or `"front"`, `Camera.constants.Type.back` or `"back"` (default)
+
+Use the `type` property to specify which camera to use.
+
+
+#### `orientation`
+
+Values:
+`Camera.constants.Orientation.auto` or `"auto"` (default),
+`Camera.constants.Orientation.landscapeLeft` or `"landscapeLeft"`, `Camera.constants.Orientation.landscapeRight` or `"landscapeRight"`, `Camera.constants.Orientation.portrait` or `"portrait"`, `Camera.constants.Orientation.portraitUpsideDown` or `"portraitUpsideDown"`
+
+The `orientation` property allows you to specify the current orientation of the phone to ensure the viewfinder is "the right way up."
+
+#### `Android` `playSoundOnCapture`
+
+Values: `true` (default) or `false`
+
+This property allows you to specify whether a shutter sound is played on capture. It is currently android only, pending [a reasonable mute implementation](http://stackoverflow.com/questions/4401232/avfoundation-how-to-turn-off-the-shutter-sound-when-capturestillimageasynchrono) in iOS.
+
+#### `onBarCodeRead`
+
+Will call the specified method when a barcode is detected in the camera's view.
+
+Event contains `data` (the data in the barcode) and `bounds` (the rectangle which outlines the barcode.)
+
+The following barcode types can be recognised:
+
+- `aztec`
+- `code128`
+- `code39`
+- `code39mod43`
+- `code93`
+- `ean13`
+- `ean8`
+- `pdf417`
+- `qr`
+- `upce`
+- `interleaved2of5` (when available)
+- `itf14` (when available)
+- `datamatrix` (when available)
+- `face` (iOS only)
+
+The barcode type is provided in the `data` object.
+
+#### `barCodeTypes`
+
+An array of barcode types to search for. Defaults to all types listed above. No effect if `onBarCodeRead` is undefined.
+
+#### `flashMode`
 
 *Note:* The face detection code is excluded by default for the **CocoaPods** installation.
 ```
