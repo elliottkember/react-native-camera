@@ -11,6 +11,12 @@
 #import <ImageIO/ImageIO.h>
 #import "RCTSensorOrientationChecker.h"
 
+#import <Daon.Face/DaonFace.h>
+#import <Daon.Face/DFSAudioVideo.h>
+#import <Daon.Face/DFSLivenessResult.h>
+#import <Daon.Face/DFSResult.h>
+#import <Daon.Face/DFSAudioVideo.h>
+
 @interface RCTCameraManager ()
 
 @property (strong, nonatomic) RCTSensorOrientationChecker * sensorOrientationChecker;
@@ -45,6 +51,73 @@ RCT_EXPORT_MODULE();
 + (BOOL)requiresMainQueueSetup
 {
   return NO;
+}
+
+// - (void) configureFaceSDK {
+//   //
+//   // Daon Face SDK
+//   //
+//   // Instantiate a new DaonFace instance only for blink & smile detection
+//   faceSDK = [[DaonFace alloc] initWithOptions:DaonFaceOptionBlink|DaonFaceOptionSmile];
+
+//   //
+//   // Configure the Face SDK properties.
+//   //
+//   NSMutableDictionary *sdkConfiguration       = [NSMutableDictionary new];
+//   sdkConfiguration[KBlinkDetectionThreshold]  = [self userSettingThreshold];
+//   [faceSDK setConfiguration:sdkConfiguration];
+// }
+
+// - (void) captureOutput:(AVCaptureOutput *)captureOutput
+//  didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+//         fromConnection:(AVCaptureConnection *)connection
+// {
+// //  if (self.faceDelegate) {
+// //    [self.faceDelegate analyzeImage:pixelBuffer];
+// //  } else {
+// //    NSLog(@"No faceDelegate found for analyzing video image");
+// //  }
+  
+//   if ( CMSampleBufferDataIsReady(sampleBuffer) ) {
+//     CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+
+//     // Create release pool to manage memory whilst capturing images
+//     @autoreleasepool
+//     {
+// //      [self.faceDelegate analyzeImage:pixelBuffer withDelegate:self.faceDelegate];
+//       [faceSDK analyzeImage:pixelBuffer withDelegate:self];
+//     }
+//   }
+// }
+
+- (void) analysisResult:(DFSResult*)result forImage:(UIImage*)image
+{
+  faceVisible = result.isFaceFound;
+  DFSLivenessResult *livenessResult = result.livenessResult;
+  
+  if (livenessResult) {
+    lastScore = livenessResult.score * 100;
+    NSLog(@"analysis result");
+    
+//    if (livenessResult.isBlink) {
+//      blinkCount += 1;
+//      [self animateBlinkStatusChange];
+//    } else if (livenessResult.isSmile) {
+//      smileCount += 1;
+//      [self animateBlinkStatusChange];
+//    }
+  }
+//
+//  [self updateStatusLabel];
+//
+//  if (result.isDeviceUpright)
+//  {
+//    self.devicePositionLabel.backgroundColor = [UIColor greenColor];
+//  }
+//  else
+//  {
+//    self.devicePositionLabel.backgroundColor = [UIColor redColor];
+//  }
 }
 
 - (NSDictionary *)constantsToExport
