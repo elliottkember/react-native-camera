@@ -90,6 +90,43 @@ RCT_EXPORT_MODULE();
 //   }
 // }
 
+- (void) configureFaceSDK {
+  //
+  // Daon Face SDK
+  //
+  // Instantiate a new DaonFace instance only for blink & smile detection
+  faceSDK = [[DaonFace alloc] initWithOptions:DaonFaceOptionBlink|DaonFaceOptionSmile];
+  
+  //
+  // Configure the Face SDK properties.
+  //
+  NSMutableDictionary *sdkConfiguration       = [NSMutableDictionary new];
+  sdkConfiguration[KBlinkDetectionThreshold]  = [self userSettingThreshold];
+  [faceSDK setConfiguration:sdkConfiguration];
+}
+
+- (void) captureOutput:(AVCaptureOutput *)captureOutput
+ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+        fromConnection:(AVCaptureConnection *)connection
+{
+//  if (self.faceDelegate) {
+//    [self.faceDelegate analyzeImage:pixelBuffer];
+//  } else {
+//    NSLog(@"No faceDelegate found for analyzing video image");
+//  }
+  
+  if ( CMSampleBufferDataIsReady(sampleBuffer) ) {
+    CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+
+    // Create release pool to manage memory whilst capturing images
+    @autoreleasepool
+    {
+//      [self.faceDelegate analyzeImage:pixelBuffer withDelegate:self.faceDelegate];
+      [faceSDK analyzeImage:pixelBuffer withDelegate:self];
+    }
+  }
+}
+
 - (void) analysisResult:(DFSResult*)result forImage:(UIImage*)image
 {
   faceVisible = result.isFaceFound;
