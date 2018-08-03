@@ -9,6 +9,12 @@
 #import <React/RCTUtils.h>
 #import <React/UIView+React.h>
 
+// #import <DaonAuthenticatorSDK/DaonFace.h>
+// #import <Daon.Face/DFSAudioVideo.h>
+// #import <Daon.Face/DFSLivenessResult.h>
+// #import <Daon.Face/DFSResult.h>
+// #import <Daon.Face/DFSAudioVideo.h>
+
 @implementation RNCameraManager
 
 RCT_EXPORT_MODULE(RNCameraManager);
