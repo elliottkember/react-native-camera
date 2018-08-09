@@ -1,5 +1,9 @@
+#import <DaonFaceSDK/DaonFace.h>
 #import <React/RCTViewManager.h>
 #import <AVFoundation/AVFoundation.h>
+#import <DaonFaceLiveness/DaonFaceLiveness.h>
+#import <DaonFaceLivenessBlink/DaonFaceLivenessBlink.h>
+#import <React/RCTEventEmitter.h>
 
 @class RCTCamera;
 
@@ -57,7 +61,12 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
   RCTCameraTorchModeAuto = AVCaptureTorchModeAuto
 };
 
-@interface RCTCameraManager : RCTViewManager<AVCaptureMetadataOutputObjectsDelegate, AVCaptureFileOutputRecordingDelegate, AVCaptureVideoDataOutputSampleBufferDelegate>
+@interface RCTCameraManager : RCTViewManager<
+  AVCaptureMetadataOutputObjectsDelegate,
+  AVCaptureFileOutputRecordingDelegate,
+  AVCaptureVideoDataOutputSampleBufferDelegate,
+  DFSAnalysisDelegate
+>
 
 @property (nonatomic, strong) dispatch_queue_t sessionQueue;
 @property (nonatomic, strong) AVCaptureSession *session;
@@ -65,6 +74,7 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
 @property (nonatomic, strong) AVCaptureDeviceInput *videoCaptureDeviceInput;
 @property (nonatomic, strong) AVCaptureStillImageOutput *stillImageOutput;
 @property (nonatomic, strong) AVCaptureMovieFileOutput *movieFileOutput;
+@property (nonatomic, strong) AVCaptureVideoDataOutput *livenessOutput;
 @property (nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
 @property (nonatomic, strong) id runtimeErrorHandlingObserver;
 @property (nonatomic, assign) NSInteger presetCamera;
@@ -77,6 +87,9 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
 @property (nonatomic, strong) RCTPromiseResolveBlock videoResolve;
 @property (nonatomic, strong) RCTPromiseRejectBlock videoReject;
 @property (nonatomic, strong) RCTCamera *camera;
+@property (nonatomic, strong) DaonFaceSDK *faceSDK;
+@property(nonatomic, strong) DFSLivenessAnalyzer *passiveAnalyzer;
+@property(nonatomic, strong) DFSLivenessBlinkAnalyzer *blinkAnalyzer;
 
 - (void)changeOrientation:(NSInteger)orientation;
 - (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position;
@@ -90,6 +103,9 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
 - (void)focusAtThePoint:(CGPoint) atPoint;
 - (void)zoom:(CGFloat)velocity reactTag:(NSNumber *)reactTag;
 - (void)setZoom;
-
+- (void)captureOutput:(AVCaptureOutput *)captureOutput
+didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+       fromConnection:(AVCaptureConnection *)connection;
+- (void) analysisResult:(NSDictionary*)result;
 
 @end

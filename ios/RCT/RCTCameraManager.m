@@ -10,12 +10,12 @@
 #import <AVFoundation/AVFoundation.h>
 #import <ImageIO/ImageIO.h>
 #import "RCTSensorOrientationChecker.h"
-
-//#import <Daon.Face/DaonFace.h>
-//#import <Daon.Face/DFSAudioVideo.h>
-//#import <Daon.Face/DFSLivenessResult.h>
-//#import <Daon.Face/DFSResult.h>
-//#import <Daon.Face/DFSAudioVideo.h>
+#import <DaonFaceSDK/DaonFace.h>
+#import <DaonFaceSDK/DFSAudioVideo.h>
+#import <DaonFaceSDK/DFSResult.h>
+#import <DaonFaceSDK/DFSLivenessResult.h>
+#import <DaonFaceLiveness/DaonFaceLiveness.h>
+#import <DaonFaceLivenessBlink/DaonFaceLivenessBlink.h>
 
 @interface RCTCameraManager ()
 
@@ -44,7 +44,6 @@ RCT_EXPORT_MODULE();
 
   if(!self.camera){
     self.camera = [[RCTCamera alloc] initWithManager:self bridge:self.bridge];
-//    [self configureFaceSDK];
   }
   return self.camera;
 }
@@ -53,112 +52,6 @@ RCT_EXPORT_MODULE();
 {
   return NO;
 }
-
-// - (void) configureFaceSDK {
-//   //
-//   // Daon Face SDK
-//   //
-//   // Instantiate a new DaonFace instance only for blink & smile detection
-//   faceSDK = [[DaonFace alloc] initWithOptions:DaonFaceOptionBlink|DaonFaceOptionSmile];
-
-//   //
-//   // Configure the Face SDK properties.
-//   //
-//   NSMutableDictionary *sdkConfiguration       = [NSMutableDictionary new];
-//   sdkConfiguration[KBlinkDetectionThreshold]  = [self userSettingThreshold];
-//   [faceSDK setConfiguration:sdkConfiguration];
-// }
-
-// - (void) captureOutput:(AVCaptureOutput *)captureOutput
-//  didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-//         fromConnection:(AVCaptureConnection *)connection
-// {
-// //  if (self.faceDelegate) {
-// //    [self.faceDelegate analyzeImage:pixelBuffer];
-// //  } else {
-// //    NSLog(@"No faceDelegate found for analyzing video image");
-// //  }
-  
-//   if ( CMSampleBufferDataIsReady(sampleBuffer) ) {
-//     CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-
-//     // Create release pool to manage memory whilst capturing images
-//     @autoreleasepool
-//     {
-// //      [self.faceDelegate analyzeImage:pixelBuffer withDelegate:self.faceDelegate];
-//       [faceSDK analyzeImage:pixelBuffer withDelegate:self];
-//     }
-//   }
-// }
-
-//- (void) configureFaceSDK {
-//  //
-//  // Daon Face SDK
-//  //
-//  // Instantiate a new DaonFace instance only for blink & smile detection
-//  faceSDK = [[DaonFace alloc] initWithOptions:DaonFaceOptionBlink|DaonFaceOptionPassive];
-//
-//  //
-//  // Configure the Face SDK properties.
-//  //
-//  NSMutableDictionary *sdkConfiguration       = [NSMutableDictionary new];
-//  sdkConfiguration[KBlinkDetectionThreshold]  = [self userSettingThreshold];
-//  [faceSDK setConfiguration:sdkConfiguration];
-//}
-
-- (void) captureOutput:(AVCaptureOutput *)captureOutput
- didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-        fromConnection:(AVCaptureConnection *)connection
-{
-  
-  NSLog(@"Sample buffer");
-//  if (self.faceDelegate) {
-//    [self.faceDelegate analyzeImage:pixelBuffer];
-//  } else {
-//    NSLog(@"No faceDelegate found for analyzing video image");
-//  }
-  
-//  if ( CMSampleBufferDataIsReady(sampleBuffer) ) {
-//    CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-//
-//    // Create release pool to manage memory whilst capturing images
-//    @autoreleasepool
-//    {
-////      [self.faceDelegate analyzeImage:pixelBuffer withDelegate:self.faceDelegate];
-//      [faceSDK analyzeImage:pixelBuffer withDelegate:self];
-//    }
-//  }
-}
-
-//- (void) analysisResult:(DFSResult*)result forImage:(UIImage*)image
-//{
-//  faceVisible = result.isFaceFound;
-//  DFSLivenessResult *livenessResult = result.livenessResult;
-//
-//  if (livenessResult) {
-//    lastScore = livenessResult.score * 100;
-//    NSLog(@"analysis result");
-//
-////    if (livenessResult.isBlink) {
-////      blinkCount += 1;
-////      [self animateBlinkStatusChange];
-////    } else if (livenessResult.isSmile) {
-////      smileCount += 1;
-////      [self animateBlinkStatusChange];
-////    }
-//  }
-////
-////  [self updateStatusLabel];
-////
-////  if (result.isDeviceUpright)
-////  {
-////    self.devicePositionLabel.backgroundColor = [UIColor greenColor];
-////  }
-////  else
-////  {
-////    self.devicePositionLabel.backgroundColor = [UIColor redColor];
-////  }
-//}
 
 - (NSDictionary *)constantsToExport
 {
@@ -175,7 +68,7 @@ RCT_EXPORT_MODULE();
                                          @"pdf417": AVMetadataObjectTypePDF417Code,
                                          @"qr": AVMetadataObjectTypeQRCode,
                                          @"aztec": AVMetadataObjectTypeAztecCode,
-                                         @"face": AVMetadataObjectTypeFace,
+                                         @"face": AVMetadataObjectTypeFace
                                          }];
 
     if (&AVMetadataObjectTypeInterleaved2of5Code != NULL) {
@@ -327,8 +220,7 @@ RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RCTCamera) {
       NSError *error = nil;
       AVCaptureDeviceInput *captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
 
-      if (error || captureDeviceInput == nil)
-      {
+      if (error || captureDeviceInput == nil) {
         NSLog(@"%@", error);
         return;
       }
@@ -337,17 +229,13 @@ RCT_CUSTOM_VIEW_PROPERTY(type, NSInteger, RCTCamera) {
 
       [self.session removeInput:self.videoCaptureDeviceInput];
 
-      if ([self.session canAddInput:captureDeviceInput])
-      {
+      if ([self.session canAddInput:captureDeviceInput]) {
         [self.session addInput:captureDeviceInput];
-
         [NSNotificationCenter.defaultCenter removeObserver:self name:AVCaptureDeviceSubjectAreaDidChangeNotification object:currentCaptureDevice];
         [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(subjectAreaDidChange:) name:AVCaptureDeviceSubjectAreaDidChangeNotification object:captureDevice];
         self.videoCaptureDeviceInput = captureDeviceInput;
         [self setFlashMode];
-      }
-      else
-      {
+      } else {
         [self.session addInput:self.videoCaptureDeviceInput];
       }
 
@@ -441,6 +329,16 @@ RCT_CUSTOM_VIEW_PROPERTY(captureAudio, BOOL, RCTCamera) {
     self.mirrorImage = false;
 
     self.sessionQueue = dispatch_queue_create("cameraManagerQueue", DISPATCH_QUEUE_SERIAL);
+    
+//    self.session = [DFSAudioVideo captureSessionWithBufferDelegate:self];
+    
+    self.faceSDK = [DaonFaceSDK new];
+    self.passiveAnalyzer = [DFSLivenessAnalyzer new];
+    self.blinkAnalyzer = [DFSLivenessBlinkAnalyzer new];
+    [self.faceSDK addAnalyzer:self.passiveAnalyzer];
+    [self.faceSDK addAnalyzer:self.blinkAnalyzer];
+    NSMutableDictionary *sdkConfiguration = [NSMutableDictionary new];
+    [self.faceSDK setConfiguration:sdkConfiguration];
 
     self.sensorOrientationChecker = [RCTSensorOrientationChecker new];
   }
@@ -588,6 +486,13 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
     if (self.presetCamera == AVCaptureDevicePositionUnspecified) {
       self.presetCamera = AVCaptureDevicePositionBack;
     }
+    
+    AVCaptureVideoDataOutput *livenessOutput = [[AVCaptureVideoDataOutput alloc] init];
+    if ([self.session canAddOutput:livenessOutput]) {
+      [self.session addOutput:livenessOutput];
+      [livenessOutput setSampleBufferDelegate:self queue:self.sessionQueue];
+      self.livenessOutput = livenessOutput;
+    }
 
     AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
     if ([self.session canAddOutput:stillImageOutput])
@@ -596,14 +501,15 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
       [self.session addOutput:stillImageOutput];
       self.stillImageOutput = stillImageOutput;
     }
-
-    AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
-    if ([self.session canAddOutput:movieFileOutput])
-    {
-      [self.session addOutput:movieFileOutput];
-      self.movieFileOutput = movieFileOutput;
-    }
-
+//
+//    AVCaptureMovieFileOutput *movieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
+//    if ([self.session canAddOutput:movieFileOutput])
+//    {
+//      [self.session addOutput:movieFileOutput];
+//      self.movieFileOutput = movieFileOutput;
+//    }
+    
+//
     AVCaptureMetadataOutput *metadataOutput = [[AVCaptureMetadataOutput alloc] init];
     if ([self.session canAddOutput:metadataOutput]) {
       [metadataOutput setMetadataObjectsDelegate:self queue:self.sessionQueue];
@@ -611,15 +517,15 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
       [metadataOutput setMetadataObjectTypes:self.barCodeTypes];
       self.metadataOutput = metadataOutput;
     }
-
-    __weak RCTCameraManager *weakSelf = self;
-    [self setRuntimeErrorHandlingObserver:[NSNotificationCenter.defaultCenter addObserverForName:AVCaptureSessionRuntimeErrorNotification object:self.session queue:nil usingBlock:^(NSNotification *note) {
-      RCTCameraManager *strongSelf = weakSelf;
-      dispatch_async(strongSelf.sessionQueue, ^{
-        // Manually restarting the session since it must have been stopped due to an error.
-        [strongSelf.session startRunning];
-      });
-    }]];
+//
+//    __weak RCTCameraManager *weakSelf = self;
+//    [self setRuntimeErrorHandlingObserver:[NSNotificationCenter.defaultCenter addObserverForName:AVCaptureSessionRuntimeErrorNotification object:self.session queue:nil usingBlock:^(NSNotification *note) {
+//      RCTCameraManager *strongSelf = weakSelf;
+//      dispatch_async(strongSelf.sessionQueue, ^{
+//        // Manually restarting the session since it must have been stopped due to an error.
+//        [strongSelf.session startRunning];
+//      });
+//    }]];
 
     [self.session startRunning];
   });
@@ -1089,14 +995,9 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
         // Transform the meta-data coordinates to screen coords
         AVMetadataMachineReadableCodeObject *transformed = (AVMetadataMachineReadableCodeObject *)[_previewLayer transformedMetadataObjectForMetadataObject:metadata];
 
-        NSString *stringValue = @"";
-        if (metadata.type != AVMetadataObjectTypeFace) {
-          stringValue = metadata.stringValue;
-        }
-        
         NSDictionary *event = @{
           @"type": metadata.type,
-          @"data": stringValue,
+//          @"data": metadata.stringValue,
           @"bounds": @{
             @"origin": @{
               @"x": [NSString stringWithFormat:@"%f", transformed.bounds.origin.x],
@@ -1252,8 +1153,31 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
                 }
                 [self.session commitConfiguration];
             });
-        }
+        }c
     #endif
+}
+
+- (void) analysisResult:(NSDictionary*)result {
+  DFSLivenessResult *livenessResult = [[DFSLivenessResult alloc] initWithResults:result];
+  if (livenessResult.isBlink) {
+    RCTLogInfo(@"[Liveness] Blink");
+    [self.bridge.eventDispatcher sendAppEventWithName:@"LivenessResult" body:@{ @"blink": @true }];
+  } else if (livenessResult.isPassive) {
+    RCTLogInfo(@"[Liveness] Passive");
+    [self.bridge.eventDispatcher sendAppEventWithName:@"LivenessResult" body:@{ @"passive": @true }];
+  }
+}
+
+- (void) captureOutput:(AVCaptureOutput *)captureOutput
+ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
+        fromConnection:(AVCaptureConnection *)connection {
+    
+  if (CMSampleBufferDataIsReady(sampleBuffer) ) {
+    CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    @autoreleasepool {
+      [self.faceSDK analyzeImage:pixelBuffer withDelegate:self];
+    }
+  }
 }
 
 @end
