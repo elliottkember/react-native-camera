@@ -1,9 +1,6 @@
 #import <React/RCTViewManager.h>
 #import <AVFoundation/AVFoundation.h>
 
-#import <Daon.Face/DFSAnalysisDelegate.h>
-@class DaonFace;
-
 @class RCTCamera;
 
 typedef NS_ENUM(NSInteger, RCTCameraAspect) {
@@ -80,9 +77,6 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
 @property (nonatomic, strong) RCTPromiseResolveBlock videoResolve;
 @property (nonatomic, strong) RCTPromiseRejectBlock videoReject;
 @property (nonatomic, strong) RCTCamera *camera;
-
-// Face SDK
-DaonFace *faceSDK;
 
 - (void)changeOrientation:(NSInteger)orientation;
 - (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position;
