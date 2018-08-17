@@ -1153,7 +1153,7 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
                 }
                 [self.session commitConfiguration];
             });
-        }c
+        }
     #endif
 }
 
