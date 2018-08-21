@@ -326,17 +326,9 @@ RCT_CUSTOM_VIEW_PROPERTY(captureAudio, BOOL, RCTCamera) {
 
 - (id)init {
   if ((self = [super init])) {
+    self.stop = false;
     self.mirrorImage = false;
-
     self.sessionQueue = dispatch_queue_create("cameraManagerQueue", DISPATCH_QUEUE_SERIAL);
-    
-//    self.session = [DFSAudioVideo captureSessionWithBufferDelegate:self];
-    
-    self.faceSDK = [DaonFaceSDK new];
-    self.passiveAnalyzer = [DFSLivenessAnalyzer new];
-    self.blinkAnalyzer = [DFSLivenessBlinkAnalyzer new];
-    [self.faceSDK addAnalyzer:self.passiveAnalyzer];
-    [self.faceSDK addAnalyzer:self.blinkAnalyzer];
     NSMutableDictionary *sdkConfiguration = [NSMutableDictionary new];
     [self.faceSDK setConfiguration:sdkConfiguration];
 
@@ -482,6 +474,12 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
 #if TARGET_IPHONE_SIMULATOR
   return;
 #endif
+  self.stop = false;
+  self.faceSDK = [DaonFaceSDK new];
+  self.passiveAnalyzer = [DFSLivenessAnalyzer new];
+  self.blinkAnalyzer = [DFSLivenessBlinkAnalyzer new];
+  [self.faceSDK addAnalyzer:self.passiveAnalyzer];
+  [self.faceSDK addAnalyzer:self.blinkAnalyzer];
   dispatch_async(self.sessionQueue, ^{
     if (self.presetCamera == AVCaptureDevicePositionUnspecified) {
       self.presetCamera = AVCaptureDevicePositionBack;
@@ -536,6 +534,9 @@ RCT_EXPORT_METHOD(setZoom:(CGFloat)zoomFactor) {
   self.camera = nil;
   return;
 #endif
+  [self.faceSDK removeAnalyzer:self.blinkAnalyzer];
+  [self.faceSDK removeAnalyzer:self.passiveAnalyzer];
+  self.stop = true;
   dispatch_async(self.sessionQueue, ^{
     self.camera = nil;
     [self.previewLayer removeFromSuperlayer];
@@ -1153,18 +1154,20 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
                 }
                 [self.session commitConfiguration];
             });
-        }c
+        }
     #endif
 }
 
 - (void) analysisResult:(NSDictionary*)result {
   DFSLivenessResult *livenessResult = [[DFSLivenessResult alloc] initWithResults:result];
   if (livenessResult.isBlink) {
-    RCTLogInfo(@"[Liveness] Blink");
-    [self.bridge.eventDispatcher sendAppEventWithName:@"LivenessResult" body:@{ @"blink": @true }];
+    [self.bridge.eventDispatcher
+            sendAppEventWithName:@"LivenessResult"
+                            body:@{ @"blink": @true }];
   } else if (livenessResult.isPassive) {
-    RCTLogInfo(@"[Liveness] Passive");
-    [self.bridge.eventDispatcher sendAppEventWithName:@"LivenessResult" body:@{ @"passive": @true }];
+    [self.bridge.eventDispatcher
+            sendAppEventWithName:@"LivenessResult"
+                            body:@{ @"passive": @true }];
   }
 }
 
@@ -1175,7 +1178,10 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
   if (CMSampleBufferDataIsReady(sampleBuffer) ) {
     CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     @autoreleasepool {
-      [self.faceSDK analyzeImage:pixelBuffer withDelegate:self];
+      
+      if (!self.stop) {
+        [self.faceSDK analyzeImage:pixelBuffer withDelegate:self];
+      }
     }
   }
 }

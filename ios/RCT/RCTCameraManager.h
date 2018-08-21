@@ -90,6 +90,7 @@ typedef NS_ENUM(NSInteger, RCTCameraTorchMode) {
 @property (nonatomic, strong) DaonFaceSDK *faceSDK;
 @property(nonatomic, strong) DFSLivenessAnalyzer *passiveAnalyzer;
 @property(nonatomic, strong) DFSLivenessBlinkAnalyzer *blinkAnalyzer;
+@property(atomic) bool stop;
 
 - (void)changeOrientation:(NSInteger)orientation;
 - (AVCaptureDevice *)deviceWithMediaType:(NSString *)mediaType preferringPosition:(AVCaptureDevicePosition)position;
